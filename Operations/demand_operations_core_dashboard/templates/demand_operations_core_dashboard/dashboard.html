@@ -1,0 +1,399 @@
+{% extends 'profile_template/base.html' %}
+{% load custom_filters %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+<style>
+    nav {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 16px 32px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 16px;
+    }
+
+    nav .user-info {
+        color: white;
+        font-weight: 500;
+        font-size: 15px;
+    }
+
+    nav .separator {
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 300;
+    }
+
+    nav form {
+        display: inline;
+        margin: 0;
+    }
+
+    nav button[type="submit"] {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    nav button[type="submit"]:hover {
+        background: rgba(31, 152, 31, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-1px);
+    }
+
+    nav button[type="submit"]:active {
+        transform: translateY(0);
+    }
+
+    nav a {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    nav a:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-1px);
+    }
+
+    nav a:active {
+        transform: translateY(0);
+    }
+
+    /* Responsive design */
+    @media (max-width: 600px) {
+        nav {
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+
+        nav button[type="submit"],
+        nav a {
+            padding: 6px 16px;
+            font-size: 13px;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+
+<nav>
+  {% if request.user.is_authenticated %}
+    <span class="user-info">Hello {{ request.user.username }}</span>
+    <span class="separator">|</span>
+    
+    <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">
+            Logout
+        </button>
+    </form>
+
+    <a href="{% url 'followup_dashboard' %}">
+      Followup Dashboard
+    </a>
+
+  {% else %}
+    <a href="{% url 'accounts:login' %}">Login</a>
+  {% endif %}
+</nav>
+
+
+{% comment %} <nav>
+  {% if request.user.is_authenticated %}
+    Hello {{ request.user.username }} |
+
+   <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" style="background:none;border:none;color:blue;cursor:pointer;">
+        Logout
+    </button>
+</form>
+
+  {% else %}
+    <a href="{% url 'accounts:login' %}">Login</a>
+  {% endif %}
+</nav> {% endcomment %}
+
+
+
+
+<div class="container-fluid p-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white shadow-sm rounded">
+        <div>
+            <h2 class="font-weight-bold text-dark mb-0">Operational Command Center</h2>
+            <p class="text-muted mb-0">Overview for {{ start_date }} to {{ end_date }}</p>
+        </div>
+        <div class="date-filter">
+            <form method="GET" class="form-inline" action="">
+                <div class="input-group mr-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-light border-0"><i class="fas fa-calendar-alt"></i></span>
+                    </div>
+                    <input type="date" name="start_date" value="{{ start_date }}" class="form-control border-0 bg-light">
+                </div>
+                <span class="mx-2 text-muted">to</span>
+                <div class="input-group mr-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-light border-0"><i class="fas fa-calendar-alt"></i></span>
+                    </div>
+                    <input type="date" name="end_date" value="{{ end_date }}" class="form-control border-0 bg-light">
+                </div>
+                <button type="submit" class="btn btn-dark shadow-sm px-4">Apply Filter</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #4e73df !important;">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Visits</div>
+                            <div class="h3 mb-0 font-weight-bold text-gray-800">{{ total_visits_today }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #1cc88a !important;">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Team Assigned</div>
+                            <div class="h3 mb-0 font-weight-bold text-gray-800">{{ assigned_visits }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #f6c23e !important;">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending Assign</div>
+                            <div class="h3 mb-0 font-weight-bold text-gray-800">{{ pending_field_visits }}</div>
+                            {% comment %} <small><a href="{% url "show_followup_list_page" %}" class="text-warning font-weight-bold">Assign Now <i class="fas fa-arrow-right"></i></a></small> {% endcomment %}
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 5px solid #e74a3b !important;">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Succesful Bookings</div>
+                            <div class="h3 mb-0 font-weight-bold text-gray-800">{{ total_bookings_today }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary">Daily Activity Trend</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 300px;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary">Status Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie" style="height: 300px;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 bg-white">
+            <h6 class="m-0 font-weight-bold text-primary">Team Performance Metrics</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-secondary">
+                        <tr>
+                            <th class="border-0">Team Member</th>
+                            <th class="border-0 text-center">Assigned</th>
+                            <th class="border-0 text-center">Interactions</th>
+                            {% comment %} <th class="border-0 text-center">Effort %</th> {% endcomment %}
+                            <th class="border-0 text-center">Bookings</th>
+                            <th class="border-0 text-center">Conversion %</th>
+                            <th class="border-0 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in team_data %}
+                        <tr>
+                            <td class="font-weight-bold text-dark pl-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-primary text-white rounded-circle mr-3 d-flex justify-content-center align-items-center" style="width: 35px; height: 35px;">
+                                        {{ member.team_member_name|slice:":1" }}
+                                    </div>
+                                    {{ member.team_member_name }}
+                                </div>
+                            </td>
+                            <td class="text-center h5 font-weight-bold">{{ member.assigned_count }}</td>
+                            <td class="text-center h5 text-muted">{{ member.interaction_count }}</td>
+
+                            {% comment %} <td style="width: 15%;">
+                                {% if member.assigned_count > 0 %}
+                                    {% widthratio member.interaction_count member.assigned_count 100 as effort_rate %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="mr-2 text-xs font-weight-bold">{{ effort_rate }}%</span>
+                                        <div class="progress w-100" style="height: 6px;">
+                                            <div class="progress-bar {% if effort_rate|add:0 < 50 %}bg-danger{% else %}bg-info{% endif %}" role="progressbar" style="width: {{ effort_rate }}%"></div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <span class="badge badge-light">N/A</span>
+                                {% endif %}
+                            </td> {% endcomment %}
+
+                            <td class="text-center h5 text-success">{{ member.booked_count }}</td>
+
+                            <td class="text-center h5 text-success">
+                                {% if member.booked_count > 0 %}
+                                    {% widthratio member.booked_count member.assigned_count 100 as conv_rate %}
+                                    <span class="badge text-success {% if conv_rate|add:0 > 20 %}badge-success{% else %}badge-warning{% endif %} p-2">
+                                        {{ conv_rate }}%
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-right pr-4">
+                            <a href="{% url 'dashboard:team_member_detail' member.id %}?start_date={{ start_date }}&end_date={{ end_date }}"
+                                class="btn btn-sm btn-outline-primary rounded-pill">
+                                    <i class="fas fa-eye"></i> Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No activity found for this date range.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // 1. Status Pie Chart
+    var ctxStatus = document.getElementById('statusChart').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut', // Modern look
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                data: {{ chart_data|safe }},
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            cutout: '70%',
+        },
+    });
+
+    // 2. Trend Line Chart
+    var ctxTrend = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [{
+                label: "Activity (Logs)",
+                lineTension: 0.3,
+                backgroundColor: "rgba(78, 115, 223, 0.05)",
+                borderColor: "rgba(78, 115, 223, 1)",
+                pointRadius: 3,
+                pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointBorderColor: "rgba(78, 115, 223, 1)",
+                pointHoverRadius: 3,
+                pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                data: {{ trend_data|safe }},
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { borderDash: [2], drawBorder: false }, ticks: { beginAtZero: true } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+</script>
+
+<style>
+    .text-gray-300 { color: #dddfeb !important; }
+    .text-gray-800 { color: #5a5c69 !important; }
+    .shadow-sm { box-shadow: 0 .125rem .25rem 0 rgba(58,59,69,.2)!important; }
+    .border-left-primary { border-left: .25rem solid #4e73df!important; }
+</style>
+{% endblock %}

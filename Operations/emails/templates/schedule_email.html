@@ -1,0 +1,134 @@
+<!-- templates/schedule_email.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Schedule an email</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 40px 0;
+        }
+        .page-wrapper {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 6px;
+            padding: 20px 24px 24px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        h1 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .subtitle {
+            margin: 0 0 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        form {
+            width: 100%;
+        }
+        .form-row {
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="datetime-local"],
+        textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="datetime-local"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #7b3f61;
+            box-shadow: 0 0 0 2px rgba(123,63,97,0.15);
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #777;
+            margin-top: 3px;
+        }
+        .actions {
+            margin-top: 18px;
+            text-align: right;
+        }
+        button[type="submit"] {
+            background-color: #7b3f61;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 18px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: #693352;
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+    <div class="card">
+        <h1>Schedule an email</h1>
+        <p class="subtitle">Fill in the details and choose when the email should be sent.</p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <label for="id_recipient">Recipient</label>
+                {{ form.recipient }}
+            </div>
+
+            <div class="form-row">
+                <label for="id_subject">Subject</label>
+                {{ form.subject }}
+            </div>
+
+            <div class="form-row">
+                <label for="id_message">Message</label>
+                {{ form.message }}
+            </div>
+
+            <div class="form-row">
+                <label for="id_send_at">Send at</label>
+                {{ form.send_at }}
+                {% if form.send_at.help_text %}
+                    <div class="help-text">{{ form.send_at.help_text }}</div>
+                {% endif %}
+            </div>
+
+            <div class="actions">
+                <button type="submit">Schedule email</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

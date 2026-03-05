@@ -1,0 +1,500 @@
+{% extends 'profile_template/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="page-wrapper">
+  <div class="page-content">
+
+    <!-- Header -->
+    <div class="header-row">
+      <div>
+        <h2 class="title">{{ member.team_member_name }}</h2>
+        <p class="muted">Activity Log: {{ start_date }} to {{ end_date }}</p>
+      </div>
+
+      <div class="header-cards">
+        <div class="stat-card stat-card-primary">
+          <div class="stat-card-body">
+            <h3 class="stat-number">{{ visits.count }}</h3>
+            <small>Assigned Visits</small>
+          </div>
+        </div>
+        <div class="stat-card stat-card-success">
+          <div class="stat-card-body">
+            <h3 class="stat-number">{{ booked_count }}</h3>
+            <small>Booked</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if visits %}
+    <div class="accordion" id="visitsAccordion">
+      {% for visit in visits %}
+      <div class="card">
+
+        <!-- CARD HEADER -->
+        <div class="card-header"
+             id="heading{{ visit.id }}"
+             data-toggle="collapse"
+             data-target="#collapse{{ visit.id }}"
+             aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+             aria-controls="collapse{{ visit.id }}">
+
+          <div class="visit-header
+              {% if visit.status == 'booked' %}visit-border-success
+              {% elif visit.status == 'unreachable' %}visit-border-danger
+              {% elif visit.status == 'pending' or visit.status == 'pending-contact' %}visit-border-warning
+              {% else %}visit-border-secondary{% endif %}">
+
+            <!-- LEFT -->
+            <div class="visit-left">
+              <div class="icon-circle icon-location">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+
+              
+            <div class="visit-main">
+  {# look up farmer info using farmer_id_display #}
+  {% with f=farmer_info|dict_get:visit.farmer_id_display %}
+    <h5 class="visit-title">
+      {% if f %}
+        {{ f.farmer_name|default:"Unknown Farmer" }}
+      {% else %}
+        Unknown Farmer
+      {% endif %}
+    </h5>
+
+    <small class="muted">
+      <i class="fas fa-seedling"></i>
+      {{ visit.activity_text }}
+    </small>
+
+    {# use first plot from API if available, else fall back to stored plot_id #}
+    {% if f and f.plots %}
+      {% with p=f.plots.0 %}
+        <div class="meta-line">
+          <span class="badge">ID #{{ visit.id }}</span>
+          <span class="badge">Plot #{{ p.plot_id|default:"-" }}</span>
+          <span class="badge">🌾 {{ p.crop|default:"-" }}</span>
+          <span class="badge">🌱 {{ p.variety|default:"-" }}</span>
+          <span class="badge">📐 {{ p.acre|default:"-" }} ac</span>
+        </div>
+      {% endwith %}
+    {% else %}
+      <div class="meta-line">
+        <span class="badge">ID #{{ visit.id }}</span>
+        <span class="badge">Plot #{{ visit.plot_id_display|default:"-" }}</span>
+      </div>
+    {% endif %}
+  {% endwith %}
+</div>
+
+         
+
+
+
+            </div>
+
+            <!-- RIGHT -->
+            <div class="visit-right">
+              <div>
+                <span class="status-pill
+                    {% if visit.status == 'booked' %}pill-success
+                    {% elif visit.status == 'unreachable' %}pill-danger
+                    {% elif visit.status == 'pending' or visit.status == 'pending-contact' %}pill-warning
+                    {% else %}pill-secondary{% endif %}">
+                  {{ visit.get_status_display|upper }}
+                </span>
+
+                <div class="muted small">
+                  Last update<br>
+                  {{ visit.updated_at|date:"d M, h:i A" }}
+                </div>
+              </div>
+
+              <i class="fas fa-chevron-down muted"></i>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- CARD BODY (TIMELINE) -->
+        <div id="collapse{{ visit.id }}"
+             class="collapse {% if forloop.first %}show{% endif %}"
+             aria-labelledby="heading{{ visit.id }}"
+             data-parent="#visitsAccordion">
+          <div class="card-body">
+
+            <div class="horizontal-timeline-wrapper">
+              <div class="horizontal-timeline">
+
+                <!-- Assigned -->
+                <div class="timeline-item">
+                  <div class="timeline-icon timeline-icon-primary">
+                    <i class="fas fa-plus"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <small class="muted strong">
+                      {{ visit.created_at|date:"d M Y" }}
+                    </small>
+                    <h6 class="strong mt-1">Assigned</h6>
+                    <p class="small muted">
+                      Assigned to team.
+                      {% if visit.notes %}<br>"{{ visit.notes }}"{% endif %}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- History -->
+                {% for log in visit.history.all %}
+                <div class="timeline-item">
+                  <div class="timeline-icon
+                      {% if log.status == 'booked' %}timeline-icon-success
+                      {% elif log.status == 'unreachable' %}timeline-icon-danger
+                      {% else %}timeline-icon-info{% endif %}">
+                    <i class="fas fa-history"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <small class="muted strong">
+                      {{ log.timestamp|date:"d M, h:i A" }}
+                    </small>
+                    <h6 class="strong mt-1">
+                      {{ log.get_status_display|title }}
+                    </h6>
+
+                    {% if log.note %}
+                    <div class="note-box">
+                      <small class="muted italic">"{{ log.note }}"</small>
+                    </div>
+                    {% endif %}
+
+                    {% if log.media_files.all %}
+                    <div class="mt-1">
+                      {% for media in log.media_files.all %}
+                      <a href="{{ media.file.url }}" target="_blank"
+                         class="file-badge">
+                        <i class="fas fa-paperclip"></i> File
+                      </a>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+                {% endfor %}
+
+                <!-- Future followups -->
+                {% for followup in visit.followup.all %}
+                <div class="timeline-item">
+                  <div class="timeline-icon timeline-icon-warning">
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <small class="strong text-warning">
+                      Scheduled: {{ followup.scheduled_date|date:"d M, h:i A" }}
+                    </small>
+                    <h6 class="strong mt-1">
+                      {{ followup.get_followup_type_display }}
+                    </h6>
+                    <p class="small muted">
+                      Priority: {{ followup.priority }}
+                    </p>
+                  </div>
+                </div>
+                {% endfor %}
+
+                <!-- End dot -->
+                <div class="timeline-item">
+                  <div class="timeline-icon small-dot"></div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="fas fa-folder-open empty-icon"></i>
+      <h4 class="muted">No visits assigned in this period.</h4>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+  /* Layout */
+  .page-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 24px 12px;
+    background-color: #f5f5f5;
+  }
+  .page-content {
+    width: 100%;
+    max-width: 960px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+  }
+
+  /* Simple utilities */
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .header-cards {
+    display: flex;
+    gap: 12px;
+  }
+  .title { margin: 0 0 4px; }
+  .muted { color: #6c757d; }
+  .strong { font-weight: 600; }
+  .small { font-size: 0.85rem; }
+  .mt-1 { margin-top: 4px; }
+  .mb-0 { margin-bottom: 0; }
+
+  /* Stats */
+  .stat-card {
+    border-radius: 6px;
+    padding: 0;
+    color: #ffffff;
+    min-width: 150px;
+  }
+  .stat-card-primary { background-color: #4e73df; }
+  .stat-card-success { background-color: #1cc88a; }
+  .stat-card-body {
+    text-align: center;
+    padding: 12px;
+  }
+  .stat-number {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  /* Card / visit header */
+  .card {
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 12px;
+    overflow: hidden;
+    background-color: #ffffff;
+  }
+  .card-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 0;
+  }
+  .card-body {
+    background-color: #fafafa;
+    padding: 12px 16px;
+  }
+
+  .visit-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid #e0e0e0;
+    cursor: pointer;
+  }
+  .visit-border-success { border-left-color: #28a745; }
+  .visit-border-danger { border-left-color: #dc3545; }
+  .visit-border-warning { border-left-color: #ffc107; }
+  .visit-border-secondary { border-left-color: #6c757d; }
+
+  .visit-left {
+    display: flex;
+    align-items: flex-start;
+  }
+  .visit-main {
+    margin-left: 12px;
+  }
+  .visit-title {
+    margin: 0 0 4px;
+    font-weight: 600;
+  }
+  .meta-line {
+    margin-top: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .visit-right {
+    display: flex;
+    align-items: center;
+    text-align: right;
+    gap: 8px;
+  }
+
+  .icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fc;
+    color: #4e73df;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #f1f3f5;
+    font-size: 12px;
+    color: #343a40;
+  }
+
+  .status-pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .pill-success { background-color: #d4edda; color: #155724; }
+  .pill-danger { background-color: #f8d7da; color: #721c24; }
+  .pill-warning { background-color: #fff3cd; color: #856404; }
+  .pill-secondary { background-color: #e2e3e5; color: #383d41; }
+
+  /* Timeline (kept from your CSS, slightly simplified) */
+  .horizontal-timeline-wrapper {
+    position: relative;
+    overflow-x: auto;
+    padding: 20px 0 12px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #adb5bd #f8f9fa;
+  }
+  .horizontal-timeline-wrapper::-webkit-scrollbar {
+    height: 8px;
+  }
+  .horizontal-timeline-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  .horizontal-timeline-wrapper::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    border-radius: 4px;
+  }
+  .horizontal-timeline-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
+  }
+
+  .horizontal-timeline {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    padding-left: 10px;
+  }
+  .timeline-item {
+    position: relative;
+    min-width: 280px;
+    max-width: 280px;
+    padding-right: 30px;
+    padding-top: 50px;
+  }
+  .timeline-item::before {
+    content: "";
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: -10px;
+    height: 4px;
+    background-color: #e9ecef;
+    z-index: 1;
+  }
+  .timeline-item:last-child::before {
+    display: none;
+  }
+  .timeline-item:last-child {
+    min-width: 50px;
+  }
+
+  .timeline-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-size: 16px;
+    background-color: #f8f9fc;
+    color: #495057;
+  }
+  .timeline-icon-primary { background-color: #4e73df; color: #ffffff; }
+  .timeline-icon-success { background-color: #1cc88a; color: #ffffff; }
+  .timeline-icon-danger { background-color: #e74a3b; color: #ffffff; }
+  .timeline-icon-info { background-color: #36b9cc; color: #ffffff; }
+  .timeline-icon-warning { background-color: #f6c23e; color: #ffffff; }
+
+  .timeline-icon.small-dot {
+    width: 20px;
+    height: 20px;
+    top: 10px;
+    left: 10px;
+    background-color: #ced4da;
+  }
+
+  .timeline-content {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e3e6f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  }
+
+  .note-box {
+    font-size: 0.85rem;
+    background-color: #f8f9fc;
+    border-left: 3px solid #4e73df;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+
+  .file-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid #d0d7ff;
+    background-color: #f1f3ff;
+    color: #3752d6;
+    font-size: 12px;
+    text-decoration: none;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 0;
+  }
+  .empty-icon {
+    font-size: 48px;
+    color: #c0c4cc;
+    margin-bottom: 12px;
+  }
+
+  .italic { font-style: italic; }
+</style>
+
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

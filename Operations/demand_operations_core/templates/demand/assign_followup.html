@@ -1,0 +1,199 @@
+{% extends "profile_template/base.html" %}
+
+{% block content %}
+<style>
+  .assign-container {
+    max-width: 700px;
+    margin: 40px auto;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px 28px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e2e8f0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .assign-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .assign-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .assign-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  .badge-id {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .farmer-card {
+    margin-top: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+
+  .farmer-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+
+  .farmer-main {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .farmer-secondary {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  .assign-form {
+    margin-top: 24px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+
+  .form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    color: #0f172a;
+    background: #ffffff;
+    transition: all 0.2s;
+  }
+
+  .form-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  }
+
+  .assign-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .btn-primary {
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.05s;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+  }
+
+  .btn-primary:active {
+    transform: translateY(1px);
+  }
+
+  .btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-secondary:hover {
+    background: #e2e8f0;
+  }
+</style>
+
+<div class="assign-container">
+  <div class="assign-header">
+    <div>
+      <h2 class="assign-title">Assign Follow-Up</h2>
+      <p class="assign-subtitle">
+        Select a team member responsible for this follow-up.
+      </p>
+    </div>
+    <span class="badge-id">#{{ followup.id }}</span>
+  </div>
+
+  <div class="farmer-card">
+    <div class="farmer-label">Farmer & Plot</div>
+    <div class="farmer-main">
+      Farmer ID: {{ followup.farmer_id }}
+      {% if followup.farmer_name %} – {{ followup.farmer_name }}{% endif %}
+    </div>
+    <div class="farmer-secondary">
+      Plot: {{ followup.plot_id|default:"N/A" }}
+      {% if followup.farmer_phone %} • Phone: {{ followup.farmer_phone }}{% endif %}
+      {% if followup.farmer_district %} • District: {{ followup.farmer_district }}{% endif %}
+    </div>
+  </div>
+
+  <form method="post" class="assign-form">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="team_member" class="form-label">Assign to team member</label>
+      <select name="team_member" id="team_member" class="form-select">
+        {% for m in team_members %}
+          <option value="{{ m.id }}">
+            {{ m.team_member_name }} ({{ m.team_member_phone_number }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="assign-actions">
+      <a href="javascript:history.back();" class="btn-secondary">Cancel</a>
+      <button type="submit" class="btn-primary">Save Assignment</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

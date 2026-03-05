@@ -1,0 +1,314 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Follow-up {{ followup.id }}</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --border-subtle: #e5e7eb;
+      --primary: #2563eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --badge-bg: #eff6ff;
+      --badge-text: #1d4ed8;
+      --danger-bg: #fee2e2;
+      --danger-text: #b91c1c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      padding: 24px;
+    }
+
+    .card {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px 24px 20px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e5e7eb;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .header-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .header-title small {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .header h2 {
+      font-size: 20px;
+      color: var(--text-main);
+    }
+
+    .followup-type {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .section {
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 14px;
+      margin-top: 14px;
+    }
+
+    .section-header {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .farmer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px 16px;
+      font-size: 14px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .field-value {
+      color: var(--text-main);
+      font-size: 14px;
+    }
+
+    /* Plots table */
+    .plots-table-wrapper {
+      margin-top: 6px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .plots-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .plots-table thead {
+      background: #f9fafb;
+    }
+
+    .plots-table th,
+    .plots-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .plots-table th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .plots-table tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .plots-table tbody tr:hover {
+      background: #eef2ff;
+    }
+
+    .plots-table td:first-child {
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      text-decoration: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+        box-shadow 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border-color: #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-ghost {
+      background: #f9fafb;
+      color: var(--text-main);
+      border-color: #e5e7eb;
+    }
+
+    .btn-ghost:hover {
+      background: #e5e7eb;
+    }
+
+    @media (max-width: 520px) {
+      .card {
+        padding: 16px 14px 14px;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .actions {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="header-title">
+        <small>Follow-up</small>
+        <h2>#{{ followup.id }} – {{ farmer.farmer_name }}</h2>
+      </div>
+      <span class="followup-type">{{ followup.get_followup_type_display }}</span>
+    </div>
+
+    <!-- Farmer details -->
+    <div class="section">
+      <div class="section-header">Farmer details</div>
+      <div class="farmer-grid">
+        <div>
+          <div class="field-label">Phone</div>
+          <div class="field-value">{{ farmer.phone_number }}</div>
+        </div>
+        <div>
+          <div class="field-label">Location</div>
+          <div class="field-value">{{ farmer.location }}</div>
+        </div>
+        <div>
+          <div class="field-label">Village</div>
+          <div class="field-value">{{ farmer.village }}</div>
+        </div>
+        <div>
+          <div class="field-label">Taluka</div>
+          <div class="field-value">{{ farmer.taluka }}</div>
+        </div>
+        <div>
+          <div class="field-label">District</div>
+          <div class="field-value">{{ farmer.district }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plots -->
+    <div class="section">
+      <div class="section-header">Plots</div>
+      <div class="plots-table-wrapper">
+        <table class="plots-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Acre</th>
+              <th>Crop</th>
+              <th>Variety</th>
+              <th>Pruning date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in farmer.plots %}
+            <tr>
+              <td>{{ p.plot_id }}</td>
+              <td>{{ p.acre }}</td>
+              <td>{{ p.crop|default:"-" }}</td>
+              <td>{{ p.variety }}</td>
+              <td>{{ p.pruning_date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" style="text-align:center; color: var(--text-muted); padding: 12px;">
+                No plots added for this farmer yet.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+    
+<a href="javascript:window.close();" class="btn btn-close">Close</a>
+
+    </div>
+  </div>
+</body>
+</html>
